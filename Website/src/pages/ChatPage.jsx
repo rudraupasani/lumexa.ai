@@ -91,13 +91,11 @@ export default function CluezyChat() {
             if (activeMode === "chat") {
                 res = await axios.post(ChatURL, {
                     prompt: currentQuery,
-                    model: "gemini-2.0-flash",
                 });
                 const text =
                     res.data?.response ||
                     res.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-                    "⚠️ No response from Gemini";
-
+                    "⚠️ No response from Lumexa AI.";
                 setMessages((prev) => [
                     ...prev,
                     { role: "assistant", content: text, liked: false, disliked: false },
@@ -359,7 +357,7 @@ export default function CluezyChat() {
                                         {msg.role === "assistant" && (
                                             <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0 mt-1">
                                                 <img
-                                                    className="w-7 h-7 rounded-lg object-contain"
+                                                    className="w-10 h-10 rounded-lg object-contain"
                                                     src={logo}
                                                     alt="Cluezy"
                                                 />
