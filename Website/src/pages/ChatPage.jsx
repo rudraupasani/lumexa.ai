@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "../utils/supabaseClient";
+// import { supabase } from "../utils/supabaseClient";
 import {
     History,
     Send,
@@ -19,10 +19,14 @@ import {
     ThumbsUp,
     ThumbsDown,
     X,
+    Globe,
+    FileText,
 } from "lucide-react";
 
 import logo from '../../public/logo.png'
 import Weather from "../components/Weather";
+import LinksURL from "../components/Links";
+import Images from "../components/Images";
 
 export default function CluezyChat() {
     const generateId = useCallback(
@@ -42,11 +46,12 @@ export default function CluezyChat() {
 
     const ChatURL = "http://localhost:5000/api/generate";
     const SearchURL = "http://localhost:5000/api/smart-search";
+    const PdfSearchURL = "http://localhost:5000/api/pdf-search";
 
     const modes = [
         { id: "chat", label: "Chat", icon: MessageSquare },
         { id: "search", label: "Web", icon: Search },
-        { id: "image", label: "Image", icon: Image },
+        { id: "PDF", label: "PDF Finder", icon: FileText },
     ];
 
     // 🧠 Create New Chat
@@ -100,9 +105,12 @@ export default function CluezyChat() {
                     ...prev,
                     { role: "assistant", content: text, liked: false, disliked: false },
                 ]);
+
+
             } else if (activeMode === "search") {
+
                 res = await axios.post(SearchURL, { query: currentQuery });
-                const { aiResponse, topResults } = res.data;
+                const { aiResponse, topResults, references, images } = res.data;
                 console.log("Search API Response:", res.data);
 
                 setMessages((prev) => [
@@ -112,6 +120,8 @@ export default function CluezyChat() {
                         content: aiResponse || "⚠️ No meaningful result found.",
                         liked: false,
                         disliked: false,
+                        sources: references,
+                        images: images,
                     },
                 ]);
 
@@ -130,14 +140,38 @@ export default function CluezyChat() {
                         },
                     ]);
                 }
-            } else if (activeMode === "image") {
+            }
+            else if (activeMode === "PDF Finder") {
+
+
+                const res = await axios.post("http://localhost:5000/api/pdf-search", {
+                    query: currentQuery,
+                });
+
+                const { pdfs } = res.data;
+
+                if (!pdfs || pdfs.length === 0) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            role: "assistant",
+                            content: "No PDFs found for this query.",
+                            liked: false,
+                            disliked: false,
+                        },
+                    ]);
+                    return;
+                }
+
                 setMessages((prev) => [
                     ...prev,
                     {
                         role: "assistant",
-                        content: "🖼️ Image generation API not yet connected.",
+                        content: "Here are the most relevant PDFs I found:",
                         liked: false,
                         disliked: false,
+                        sources: pdfs, // 👈 reuse Links component
+                        isPDF: true,
                     },
                 ]);
             }
@@ -205,6 +239,8 @@ export default function CluezyChat() {
             });
         }
     }, [messages]);
+
+    console.log("messagesss : ", messages)
 
     const ActiveModeIcon =
         modes.find((m) => m.id === activeMode)?.icon || MessageSquare;
@@ -290,55 +326,157 @@ export default function CluezyChat() {
                 </header>
 
                 {/* Messages */}
-                <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
+                <div ref={scrollRef} className="flex-1 overflow-y-auto px-2 py-2 items-center justify-center">
                     {messages.length === 0 && !loading ? (
                         <div className="flex flex-col items-center justify-center h-full text-center space-y-8 px-4">
-                            {/* Logo */}
-                            <div className="w-20 h-20 bg-zinc-900 rounded-2xl flex items-center justify-center border border-zinc-800 shadow-2xl">
-                                <img
-                                    className="h-16 w-16 rounded-xl object-contain"
-                                    src={logo}
-                                    alt="Cluezy logo"
-                                />
-                            </div>
-
-                            {/* Title */}
                             <div className="space-y-3">
-                                <h2 className="text-3xl font-semibold text-white tracking-tight">
-                                    Welcome to <span className="text-blue-500">Cluezy</span>
-                                </h2>
-                                <p className="text-zinc-400 text-base max-w-lg mx-auto leading-relaxed">
-                                    Your intelligent research assistant. Search the web, generate insights, and create images with AI.
+                                <h1 className="text-4xl md:text-5xl font-bold text-white">
+                                    Ask anything
+                                </h1>
+                                <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+                                    Lumexa helps you think, search, and create faster and smarter.
                                 </p>
                             </div>
+                            <footer className="px-4 py-1 w-full">
+                                <div className="max-w-3xl mx-auto flex items-end gap-3 bg-[#0d0d0d]/50 backdrop-blur-md border border-zinc-800 rounded-3xl px-4 py-3 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 focus-within:border-blue-500/70">
 
-                            {/* Suggested Prompts */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 w-full max-w-2xl">
-                                {[
-                                    { icon: "🌐", text: "Search latest AI market trends" },
-                                    { icon: "🧠", text: "Generate startup ideas" },
-                                    { icon: "☁️", text: "What's the weather in Tokyo?" },
-                                    { icon: "🖼️", text: "Create a futuristic logo design" },
-                                ].map((suggestion, i) => (
+                                    {/* Mode Selector */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setShowModeMenu(!showModeMenu)}
+                                            className={`
+    group relative flex items-center justify-center
+    w-9 h-9 rounded-xl cursor-pointer
+    backdrop-blur-md border transition-all duration-200
+    ${showModeMenu
+                                                    ? "bg-[#0b0b0b]/90 border-blue-500/40 shadow-[0_0_12px_rgba(59,130,246,0.35)]"
+                                                    : "bg-[#141414]/80 border-white/10 hover:bg-[#1a1a1a]"
+                                                }
+  `}
+                                        >
+                                            {/* Soft hover glow */}
+                                            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition pointer-events-none" />
+
+                                            {/* Active Mode Icon */}
+                                            <Globe
+                                                size={16}
+                                                className={`
+      transition-colors duration-200
+      ${showModeMenu
+                                                        ? "text-blue-400"
+                                                        : "text-zinc-400 group-hover:text-white"
+                                                    }
+    `}
+                                            />
+
+                                            {/* Chevron overlay */}
+                                        </button>
+
+
+                                        {showModeMenu && (
+                                            <div className="absolute bottom-full mb-3 left-0 w-56 rounded-2xl overflow-hidden backdrop-blur-xl bg-[#0b0b0b]/90 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] animate-fadeIn">
+
+                                                {/* Header */}
+                                                <div className="px-4 py-2 text-xs uppercase tracking-wider text-zinc-500 border-b border-white/5">
+                                                    Modes
+                                                </div>
+
+                                                {/* Mode List */}
+                                                <div className="p-2 space-y-1">
+                                                    {modes.map((m) => {
+                                                        const active = activeMode === m.id;
+
+                                                        return (
+                                                            <button
+                                                                key={m.id}
+                                                                onClick={() => {
+                                                                    setActiveMode(m.id);
+                                                                    setShowModeMenu(false);
+                                                                }}
+                                                                className={`
+                                                                  group w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200
+                                                                ${active
+                                                                        ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-white shadow-inner"
+                                                                        : "hover:bg-white/5 text-zinc-300"
+                                                                    }
+                                                           `}
+                                                            >
+                                                                {/* Icon */}
+                                                                <div
+                                                                    className={`
+                                                                          flex items-center justify-center w-9 h-9 rounded-lg transition
+                                                                          ${active
+                                                                            ? "bg-blue-500/20 text-blue-400"
+                                                                            : "bg-white/5 text-zinc-400 group-hover:text-white"
+                                                                        }
+                                                                 `}
+                                                                >
+                                                                    <m.icon size={16} />
+                                                                </div>
+
+                                                                {/* Label */}
+                                                                <div className="flex flex-col items-start text-left">
+                                                                    <span className="font-medium leading-tight">
+                                                                        {m.label}
+                                                                    </span>
+                                                                    <span className="text-xs text-zinc-500 group-hover:text-zinc-400">
+                                                                        Smart {m.label.toLowerCase()} responses
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Active Indicator */}
+                                                                {active && (
+                                                                    <div className="ml-auto w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Input Area */}
+                                    <div className="flex-1 relative">
+                                        <textarea
+                                            value={query}
+                                            onChange={(e) => setQuery(e.target.value)}
+                                            placeholder={getPlaceholder()}
+                                            onKeyDown={(e) =>
+                                                e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())
+                                            }
+                                            rows={1}
+                                            className="w-full bg-transparent resize-none outline-none text-[15px] text-zinc-100 placeholder-zinc-500 px-2 py-0 max-h-40 overflow-y-auto leading-6"
+                                        />
+
+                                        {/* Thinking shimmer while loading */}
+                                        {loading && (
+                                            <div className="absolute inset-y-0 right-3 flex items-center">
+                                                <div className="flex items-center gap-2 text-sm text-zinc-400 animate-pulse">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" />
+                                                    <span>Thinking...</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Send Button */}
                                     <button
-                                        key={i}
-                                        onClick={() => handleQuickPrompt(suggestion.icon + " " + suggestion.text)}
-                                        className="group px-5 py-4 bg-zinc-900 hover:bg-zinc-800 text-left rounded-xl border border-zinc-800 hover:border-zinc-700 transition-all duration-200 flex items-start gap-3"
+                                        onClick={handleSend}
+                                        disabled={loading || !query.trim()}
+                                        className="p-2.5 rounded-xl cursor-pointer bg-black hover:opacity-90 transition-all duration-200 disabled:opacity-40 flex items-center justify-center shadow-[0_0_10px_rgba(99,102,241,0.4)]"
                                     >
-                                        <span className="text-xl mt-0.5">{suggestion.icon}</span>
-                                        <span className="text-zinc-300 group-hover:text-white text-sm font-medium transition-colors">
-                                            {suggestion.text}
-                                        </span>
+                                        <Send size={18} />
                                     </button>
-                                ))}
-                            </div>
+                                </div>
+                            </footer>
                         </div>
 
 
                         //             {/* Footer Note */}
-                            // {/* <div className="absolute bottom-1 text-[7px] text-gray-500">
-                            //             Powered by <span className="text-blue-400 font-medium"><a href="https://www.cluezy.site">Cluezy Engine</a></span> ⚡
-                            //         </div> */}
+                        // {/* <div className="absolute bottom-1 text-[7px] text-gray-500">
+                        //             Powered by <span className="text-blue-400 font-medium"><a href="https://www.cluezy.site">Cluezy Engine</a></span> ⚡
+                        //         </div> */}
                         // </div>
 
 
@@ -371,68 +509,86 @@ export default function CluezyChat() {
                                                     : "bg-transparent border-zinc-900"
                                                     }`}
                                             >
+
                                                 {msg.role === "assistant" ? (
                                                     <>
                                                         <div className="prose prose-invert prose-sm max-w-none leading-relaxed text-zinc-300">
+
+                                                            {msg.sources?.length > 0 && (
+                                                                <LinksURL data={msg.sources} />
+                                                            )}
+
+                                                            {msg.images?.length > 0 && (
+                                                                <Images images={msg.images} />
+                                                            )}
+
                                                             <ReactMarkdown
                                                                 components={{
+                                                                    // Root
+                                                                    body: ({ children }) => (
+                                                                        <div className="prose prose-invert max-w-none">{children}</div>
+                                                                    ),
 
-                                                                    body: ({ children }) => (<div>{children}</div>),
-                                                                    // Headings
+
+                                                                    /* =========================
+                                                                       HEADINGS
+                                                                    ========================= */
                                                                     h1: ({ children }) => (
-                                                                        <h1 className="text-3xl font-bold text-white mt-8 mb-4 pb-2 border-b border-zinc-800 tracking-tight">
+                                                                        <h1 className="text-3xl font-bold text-white mt-10 mb-5 pb-3 border-b border-zinc-800 tracking-tight">
                                                                             {children}
                                                                         </h1>
                                                                     ),
                                                                     h2: ({ children }) => (
-                                                                        <h2 className="text-2xl font-semibold text-white mt-6 mb-3 tracking-tight">
+                                                                        <h2 className="text-2xl font-semibold text-white mt-8 mb-4 tracking-tight">
                                                                             {children}
                                                                         </h2>
                                                                     ),
                                                                     h3: ({ children }) => (
-                                                                        <h3 className="text-xl font-semibold text-white mt-5 mb-2 tracking-tight">
+                                                                        <h3 className="text-xl font-semibold text-white mt-6 mb-3 tracking-tight">
                                                                             {children}
                                                                         </h3>
                                                                     ),
 
-                                                                    // Paragraph
+                                                                    /* =========================
+                                                                       PARAGRAPH
+                                                                    ========================= */
                                                                     p: ({ children }) => (
-                                                                        <p className="mb-4 leading-7 text-zinc-300">{children}</p>
+                                                                        <p className="mb-4 leading-7 text-zinc-300 text-[15px]">
+                                                                            {children}
+                                                                        </p>
+                                                                    ),
+                                                                
+
+                                                                    /* =========================
+                                                                       LINKS
+                                                                    ========================= */
+                                                                    a: ({ href, children }) => (
+                                                                        <a
+                                                                            href={href}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="group inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 underline underline-offset-4 decoration-blue-400/30 hover:decoration-blue-300 transition-colors duration-200"
+                                                                        >
+                                                                            <img
+                                                                                src={`https://www.google.com/s2/favicons?domain=${href}&sz=64`}
+                                                                                alt=""
+                                                                                className="w-3 h-3 rounded-sm opacity-80 group-hover:opacity-100"
+                                                                            />
+                                                                        </a>
                                                                     ),
 
-                                                                    // Links
-                                                                    a: ({ href, children }) => (
-                                                                            <div className="w-[150px] h-20 bg-gray-900 rounded-2xl border border-gray-800 p-4 flex flex-col items-center justify-between hover:bg-gray-800 transition-all duration-200">
-                                                                                <a
-                                                                                    href={href}
-                                                                                    target="_blank"
-                                                                                    rel="noopener noreferrer"
-                                                                                    className="flex flex-col items-center text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 hover:decoration-blue-300 transition-colors duration-200"
-                                                                                >
-                                                                                    {/* 🖼️ Optional Image Preview */}
-                                                                                    <img
-                                                                                        src={`https://www.google.com/s2/favicons?domain=${href}&sz=128`}
-                                                                                        alt="favicon"
-                                                                                        className="w-5 h-5 mb-2 rounded"
-                                                                                    />
-
-                                                                                    {/* 🔗 Link Text */}
-                                                                                    <span className="text-center text-sm font-medium">{children}</span>
-                                                                                </a>
-                                                                            </div>
-                                                                    )
-                                                                    ,
-
-                                                                    // Code & Inline Code
+                                                                    /* =========================
+                                                                       CODE
+                                                                    ========================= */
                                                                     code({ inline, className, children, ...props }) {
                                                                         const match = /language-(\w+)/.exec(className || "");
                                                                         return !inline && match ? (
-                                                                            <div className="my-4 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/70 shadow-md">
+                                                                            <div className="my-6 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80 shadow-lg">
                                                                                 <SyntaxHighlighter
                                                                                     language={match[1]}
                                                                                     style={oneDark}
                                                                                     PreTag="div"
-                                                                                    className="bg-black !p-4 text-sm"
+                                                                                    className="!bg-black !p-4 text-sm"
                                                                                     showLineNumbers
                                                                                     {...props}
                                                                                 >
@@ -440,87 +596,104 @@ export default function CluezyChat() {
                                                                                 </SyntaxHighlighter>
                                                                             </div>
                                                                         ) : (
-                                                                            <code className="bg-zinc-900/80 border border-zinc-800 px-1.5 py-0.5 rounded-md text-blue-400 text-sm font-mono">
+                                                                            <code className="rounded-md bg-zinc-900/80 border border-zinc-800 px-1.5 py-0.5 font-mono text-sm text-blue-400">
                                                                                 {children}
                                                                             </code>
                                                                         );
                                                                     },
 
-                                                                    // Blockquote
+                                                                    /* =========================
+                                                                       BLOCKQUOTE
+                                                                    ========================= */
                                                                     blockquote: ({ children }) => (
-                                                                        <blockquote className="border-l-4 border-blue-500 pl-4 py-3 my-4 bg-zinc-900/60 rounded-r-lg text-zinc-400 italic backdrop-blur-sm">
+                                                                        <blockquote className="my-5 border-l-4 border-blue-500 bg-zinc-900/60 pl-5 py-4 rounded-r-lg italic text-zinc-400 backdrop-blur-sm">
                                                                             {children}
                                                                         </blockquote>
                                                                     ),
 
-                                                                    // Lists
+                                                                    /* =========================
+                                                                       LISTS
+                                                                    ========================= */
                                                                     ul: ({ children }) => (
-                                                                        <ul className="list-disc list-outside ml-6 space-y-2 text-zinc-300 mb-4">
+                                                                        <ul className="list-disc ml-6 mb-4 space-y-2 text-zinc-300">
                                                                             {children}
                                                                         </ul>
                                                                     ),
                                                                     ol: ({ children }) => (
-                                                                        <ol className="list-decimal list-outside ml-6 space-y-2 text-zinc-300 mb-4">
+                                                                        <ol className="list-decimal ml-6 mb-4 space-y-2 text-zinc-300">
                                                                             {children}
                                                                         </ol>
                                                                     ),
-                                                                    li: ({ children }) => <li className="leading-7">{children}</li>,
+                                                                    li: ({ children }) => (
+                                                                        <li className="leading-7 text-[15px]">{children}</li>
+                                                                    ),
 
-                                                                    // Divider
-                                                                    hr: () => <hr className="my-8 border-zinc-800" />,
+                                                                    /* =========================
+                                                                       TABLES
+                                                                    ========================= */
+                                                                    // Professional, production-ready table components (MDX / React)
+                                                                    // Designed for analytical, research-style outputs
 
-                                                                    // Tables
                                                                     table: ({ children }) => (
-                                                                        <div className="overflow-x-auto my-6 rounded-lg border border-zinc-800 shadow-sm">
-                                                                            <table className="min-w-full text-sm text-left">{children}</table>
+                                                                        <div className="my-8 overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950/60 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                                                                            <table className="min-w-full border-collapse text-sm">
+                                                                                {children}
+                                                                            </table>
                                                                         </div>
                                                                     ),
+
                                                                     thead: ({ children }) => (
-                                                                        <thead className="bg-zinc-900/80 border-b border-zinc-800">
+                                                                        <thead className="bg-zinc-900/90 border-b border-zinc-800">
                                                                             {children}
                                                                         </thead>
                                                                     ),
-                                                                    th: ({ children }) => (
-                                                                        <th className="px-4 py-3 text-zinc-200 font-semibold">{children}</th>
+
+                                                                    tbody: ({ children }) => (
+                                                                        <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                                                                            {children}
+                                                                        </tbody>
                                                                     ),
+
+                                                                    tr: ({ children }) => (
+                                                                        <tr className="transition-colors hover:bg-zinc-900/60">
+                                                                            {children}
+                                                                        </tr>
+                                                                    ),
+
+                                                                    th: ({ children }) => (
+                                                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-100">
+                                                                            {children}
+                                                                        </th>
+                                                                    ),
+
                                                                     td: ({ children }) => (
-                                                                        <td className="px-4 py-3 text-zinc-400 border-t border-zinc-900">
+                                                                        <td className="px-5 py-4 align-top leading-relaxed text-zinc-300">
                                                                             {children}
                                                                         </td>
                                                                     ),
 
-                                                                    // Strong / Italic / Delete
+
+                                                                    /* =========================
+                                                                       DIVIDER
+                                                                    ========================= */
+                                                                    hr: () => (
+                                                                        <hr className="my-10 border-zinc-800" />
+                                                                    ),
+
+                                                                    /* =========================
+                                                                       TEXT EMPHASIS
+                                                                    ========================= */
                                                                     strong: ({ children }) => (
-                                                                        <strong className="text-white font-semibold">{children}</strong>
+                                                                        <strong className="font-semibold text-white">{children}</strong>
                                                                     ),
                                                                     em: ({ children }) => (
-                                                                        <em className="text-zinc-400 italic">{children}</em>
+                                                                        <em className="italic text-zinc-400">{children}</em>
                                                                     ),
                                                                     del: ({ children }) => (
                                                                         <del className="text-zinc-500 line-through">{children}</del>
                                                                     ),
 
-                                                                    // // 🖼️ Image
-                                                                    // img: ({ src, alt }) => (
-                                                                    //     <div className="flex justify-center my-6">
-                                                                    //         <img
-                                                                    //             src={src}
-                                                                    //             alt={alt || "Image"}
-                                                                    //             className="rounded-xl border border-zinc-800 shadow-md max-w-full max-h-[450px] object-contain hover:scale-[1.02] transition-transform duration-300"
-                                                                    //         />
-                                                                    //     </div>
-                                                                    // ),
 
-                                                                    // 🎥 Video
-                                                                    // video: ({ src, controls = true }) => (
-                                                                    //     <div className="flex justify-center my-6">
-                                                                    //         <video
-                                                                    //             src={src}
-                                                                    //             controls={controls}
-                                                                    //             className="rounded-xl border border-zinc-800 shadow-md max-w-full max-h-[500px] object-cover"
-                                                                    //         />
-                                                                    //     </div>
-                                                                    // ),
                                                                 }}
                                                             >
                                                                 {msg.content}
@@ -556,79 +729,146 @@ export default function CluezyChat() {
                             )}
                         </div>
                     )}
-                </div> {/* 👈 close messages wrapper properly */}
+                </div>
+
 
                 {/* Input */}
-                <footer className="px-4 py-5">
-                    <div className="max-w-3xl mx-auto flex items-end gap-3 bg-[#0d0d0d]/80 backdrop-blur-md border border-zinc-800 rounded-2xl px-4 py-3 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 focus-within:border-blue-500/70">
 
-                        {/* Mode Selector */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowModeMenu(!showModeMenu)}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-[#161616] border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-all duration-200 text-sm text-zinc-300"
-                            >
+                {messages.length > 1 && (
+                    <footer className="px-4 py-5">
+                        <div className="max-w-3xl mx-auto flex items-end gap-3 bg-[#0d0d0d]/50 backdrop-blur-md border border-zinc-800 rounded-3xl px-4 py-3 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 focus-within:border-blue-500/70">
 
-                                <ActiveModeIcon size={16} />
-                                <ChevronDown size={14} className={`transition-transform ${showModeMenu ? "rotate-180" : ""}`} />
-                            </button>
+                            {/* Mode Selector */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowModeMenu(!showModeMenu)}
+                                    className={`
+    group relative flex items-center justify-center
+    w-9 h-9 rounded-xl cursor-pointer
+    backdrop-blur-md border transition-all duration-200
+    ${showModeMenu
+                                            ? "bg-[#0b0b0b]/90 border-blue-500/40 shadow-[0_0_12px_rgba(59,130,246,0.35)]"
+                                            : "bg-[#141414]/80 border-white/10 hover:bg-[#1a1a1a]"
+                                        }
+  `}
+                                >
+                                    {/* Soft hover glow */}
+                                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition pointer-events-none" />
 
-                            {showModeMenu && (
-                                <div className="absolute bottom-full mb-2 left-0 bg-[#0d0d0d]/95 border border-zinc-800 rounded-xl w-44 overflow-hidden shadow-xl backdrop-blur-md animate-fadeIn">
-                                    {modes.map((m) => (
-                                        <button
-                                            key={m.id}
-                                            onClick={() => {
-                                                setActiveMode(m.id);
-                                                setShowModeMenu(false);
-                                            }}
-                                            className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors ${activeMode === m.id
-                                                ? "bg-zinc-800 text-white"
-                                                : "hover:bg-zinc-900 text-zinc-300"
-                                                }`}
-                                        >
-                                            <m.icon size={16} />
-                                            <span>{m.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                    {/* Active Mode Icon */}
+                                    <Globe
+                                        size={16}
+                                        className={`
+      transition-colors duration-200
+      ${showModeMenu
+                                                ? "text-blue-400"
+                                                : "text-zinc-400 group-hover:text-white"
+                                            }
+    `}
+                                    />
 
-                        {/* Input Area */}
-                        <div className="flex-1 relative">
-                            <textarea
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                                placeholder={getPlaceholder()}
-                                onKeyDown={(e) =>
-                                    e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())
-                                }
-                                rows={1}
-                                className="w-full bg-transparent resize-none outline-none text-[15px] text-zinc-100 placeholder-zinc-500 px-2 py-0 max-h-40 overflow-y-auto leading-6"
-                            />
+                                    {/* Chevron overlay */}
+                                </button>
 
-                            {/* Thinking shimmer while loading */}
-                            {loading && (
-                                <div className="absolute inset-y-0 right-3 flex items-center">
-                                    <div className="flex items-center gap-2 text-sm text-zinc-400 animate-pulse">
-                                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" />
-                                        <span>Thinking...</span>
+
+                                {showModeMenu && (
+                                    <div className="absolute bottom-full mb-3 left-0 w-56 rounded-2xl overflow-hidden backdrop-blur-xl bg-[#0b0b0b]/90 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] animate-fadeIn">
+
+                                        {/* Header */}
+                                        <div className="px-4 py-2 text-xs uppercase tracking-wider text-zinc-500 border-b border-white/5">
+                                            Modes
+                                        </div>
+
+                                        {/* Mode List */}
+                                        <div className="p-2 space-y-1">
+                                            {modes.map((m) => {
+                                                const active = activeMode === m.id;
+
+                                                return (
+                                                    <button
+                                                        key={m.id}
+                                                        onClick={() => {
+                                                            setActiveMode(m.id);
+                                                            setShowModeMenu(false);
+                                                        }}
+                                                        className={`
+                                                                  group w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200
+                                                                ${active
+                                                                ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-white shadow-inner"
+                                                                : "hover:bg-white/5 text-zinc-300"
+                                                            }
+                                                           `}
+                                                    >
+                                                        {/* Icon */}
+                                                        <div
+                                                            className={`
+                                                                          flex items-center justify-center w-9 h-9 rounded-lg transition
+                                                                          ${active
+                                                                    ? "bg-blue-500/20 text-blue-400"
+                                                                    : "bg-white/5 text-zinc-400 group-hover:text-white"
+                                                                }
+                                                                 `}
+                                                        >
+                                                            <m.icon size={16} />
+                                                        </div>
+
+                                                        {/* Label */}
+                                                        <div className="flex flex-col items-start text-left">
+                                                            <span className="font-medium leading-tight">
+                                                                {m.label}
+                                                            </span>
+                                                            <span className="text-xs text-zinc-500 group-hover:text-zinc-400">
+                                                                Smart {m.label.toLowerCase()} responses
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Active Indicator */}
+                                                        {active && (
+                                                            <div className="ml-auto w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
 
-                        {/* Send Button */}
-                        <button
-                            onClick={handleSend}
-                            disabled={loading || !query.trim()}
-                            className="p-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 transition-all duration-200 disabled:opacity-40 flex items-center justify-center shadow-[0_0_10px_rgba(99,102,241,0.4)]"
-                        >
-                            <Send size={18} />
-                        </button>
-                    </div>
-                </footer>
+                            {/* Input Area */}
+                            <div className="flex-1 relative">
+                                <textarea
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    placeholder={getPlaceholder()}
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())
+                                    }
+                                    rows={1}
+                                    className="w-full bg-transparent resize-none outline-none text-[15px] text-zinc-100 placeholder-zinc-500 px-2 py-0 max-h-40 overflow-y-auto leading-6"
+                                />
+
+                                {/* Thinking shimmer while loading */}
+                                {loading && (
+                                    <div className="absolute inset-y-0 right-3 flex items-center">
+                                        <div className="flex items-center gap-2 text-sm text-zinc-400 animate-pulse">
+                                            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" />
+                                            <span>Thinking...</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Send Button */}
+                            <button
+                                onClick={handleSend}
+                                disabled={loading || !query.trim()}
+                                className="p-2.5 rounded-xl bg-black hover:opacity-90 transition-all duration-200 disabled:opacity-40 flex items-center justify-center shadow-[0_0_10px_rgba(99,102,241,0.4)]"
+                            >
+                                <Send size={18} />
+                            </button>
+                        </div>
+                    </footer>
+                )}
             </div>
         </div >
     );

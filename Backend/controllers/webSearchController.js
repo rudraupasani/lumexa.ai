@@ -1,31 +1,33 @@
 import axios from "axios";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 export const smartWebSearch = async (req, res) => {
   try {
     const { query } = req.body;
-    if (!query)
+
+    if (!query) {
       return res.status(400).json({
         success: false,
         error: "Query is required.",
       });
+    }
 
-    // 🔐 Environment Variables
+    // Environment variables
     const SERPER_API_KEY = process.env.SERPER_API_KEY;
     const CEREBRAS_API_KEY = process.env.CEREBRAS_API_KEY;
 
     if (!SERPER_API_KEY || !CEREBRAS_API_KEY) {
       return res.status(500).json({
         success: false,
-        error: "Missing API keys. Please check your .env file.",
+        error: "Missing API keys. Check environment configuration.",
       });
     }
 
-    // 🌍 Step 1: Get live search data from Serper.dev
-    const serperURL = "https://google.serper.dev/search";
+    // Step 1: Web search
     const searchResponse = await axios.post(
-      serperURL,
+      "https://google.serper.dev/search",
       { q: query },
       {
         headers: {
@@ -40,106 +42,83 @@ export const smartWebSearch = async (req, res) => {
     if (!results.length) {
       return res.status(200).json({
         success: true,
-        aiResponse: "No relevant information found for your query.",
+        query,
+        aiResponse: "No relevant verified information was found for this query.",
         references: [],
+        images: [],
         totalResults: 0,
-        analyzedBy: "Cluezy AI (No Results)",
+        analyzedBy: "Lumexa",
       });
     }
 
-    // 🧠 Step 2: Create concise context for Cerebras
+    // Step 2: Build context for reasoning
     const context = results
-      .slice(0, 8)
+      .slice(0, 10)
       .map(
         (r, i) =>
-          `(${i + 1}) ${r.title}\n${r.snippet}\nSource: ${r.link}\n`
+          `(${i + 1}) ${r.title}\n${r.snippet}\nSource: ${r.link}`
       )
-      .join("\n");
+      .join("\n\n");
 
-    // 💬 Step 3: Prompt for Cerebras
-const FinalPrompt = `
-You are **Lumexa**, a next-generation **Research & Intelligence Assistant** developed by **Optivex Technologies**.  
-Your role is to deliver **accurate, web-verified, professional answers** in **structured markdown**, as if written by a human research analyst.
+    // Step 3: Refined system prompt (professional + tables allowed)
+    const FinalPrompt = `
+SYSTEM ROLE
+You are Lumexa, a premium Research and Intelligence Assistant.
 
---- 
+You deliver accurate, web-verified explanations written in clear, professional language, comparable to a senior human research analyst.
+You must never refer to yourself as an AI.
 
-## 🧭 CORE PERSONALITY
-- Intelligent, confident, calm — never robotic.  
-- Think deeply, reason logically, and write fluently.  
-- Focus on **clarity, facts, and reasoning**, not verbosity.  
-- Never refer to yourself as an AI.  
-- End every response with a clean footer:
+CORE IDENTITY
+Calm, analytical, precise, and human-like.
+Prioritize clarity, factual accuracy, and structured reasoning.
+Avoid filler language, hype, or disclaimers.
 
-\`---\`  
-**Powered by Lumexa AI – Smart Web Intelligence.**
+RESPONSE STRUCTURE (MANDATORY ORDER)
+1. HEADING
+2. OVERVIEW (single paragraph)
+3. KEY POINTS (list when clarity improves)
+4. EXPLANATION (1–2 paragraphs)
+5. SUMMARY
 
----
+STYLE RULES
+Use markdown formatting.
+Tables are not-allowed and encouraged when comparing data or summarizing facts.
+Maintain a neutral, authoritative tone.
+No emojis, no self-references.
 
-## 🧠 OBJECTIVES
-1. Detect user intent: facts, summaries, comparisons, visuals, or reasoning.  
-2. Fuse insights from multiple credible web sources.  
-3. Present answers in **elegant markdown** with headings, bullet points, tables, bold/italic.  
-4. Keep responses **6–8 sentences**, concise but rich.  
-5. When uncertain, explain both sides neutrally.
+CITATION RULES (STRICT)
+Every factual claim must include an inline citation.
+Citations must appear immediately after the sentence.
+Do not group links.
+No references or sources sections.
+Citation format: [Source Title](URL)
 
----
+CONTENT LIMITATIONS
+Do not include footers or closing remarks.
+Do not mention platforms or organizations unless required by context.
+Do not explain methodology.
 
-## 🧩 RESPONSE STYLES
-- **News/Research:** Summarize what, why, impact; 3–4 factual highlights; neutral tone.  
-- **Tech/Science/Trends:** Explain clearly, include 3–5 data-backed insights, mini-conclusion.  
-- **Sports/Matches:** Include score, key performers, stats, event info.  
-- Use **tables, bullet points, and headings** only when they improve clarity.
-
----
-
-## 🌐 SOURCES
-- Include 2–5 authoritative, credible links (Reuters, MIT, NASA, WHO, Statista, etc.)  
-- Inline formatting: **[Source Name](URL)**  
-- Do **not** use markdown lists for sources in one-line summary mode.
-
----
-
-## ⚙️ ADVANCED BEHAVIOR
-- Auto-detect query type (news, tech, sports, research).  
-- Combine multi-source snippets logically.  
-- Maintain natural tone and authority.  
-- Gracefully handle missing or conflicting data.  
-
----
-
-## 💬 COMMUNICATION STYLE
-- Speak like a calm, confident human researcher.  
-- Use connecting phrases: “Meanwhile,” “According to recent data,” “In summary,” etc.  
-- Markdown must be elegant, structured, and readable.  
-- Avoid repetition, disclaimers, filler, or unnecessary emojis.
-
----
-
-## 🧠 USER QUERY
+USER QUERY
 "${query}"
 
-## 🌐 WEB CONTEXT
+VERIFIED WEB CONTEXT
 ${context}
 
---- 
-
-\`---\`  
-**Powered by Lumexa AI – Smart Web Intelligence.**
+FINAL INSTRUCTION
+Answer directly, follow the structure exactly, and end cleanly.
 `;
 
-
-    // 🚀 Step 4: Call Cerebras API
-    const CEREBRAS_MODEL = "gpt-oss-120b"; // Public Cerebras model
+    // Step 4: Cerebras call
     const cerebrasResponse = await axios.post(
       "https://api.cerebras.ai/v1/chat/completions",
       {
-        model: CEREBRAS_MODEL,
+        model: "gpt-oss-120b",
         messages: [
           { role: "system", content: FinalPrompt },
           { role: "user", content: query },
         ],
         temperature: 0.6,
-        max_tokens: 800,
+        max_tokens: 900,
       },
       {
         headers: {
@@ -151,36 +130,56 @@ ${context}
 
     const aiText =
       cerebrasResponse.data?.choices?.[0]?.message?.content ||
-      "⚠️ No response received from Cluezy AI.";
+      "No response generated.";
+    // Step 5: Image search
+    let images = [];
+    try {
+      const imageResponse = await axios.post(
+        "https://google.serper.dev/images",
+        { q: query, num: 10 },
+        {
+          headers: {
+            "X-API-KEY": SERPER_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    // 🔗 Step 5: Build references
-    const references = results.slice(0, 8).map((r, i) => ({
+      images =
+        imageResponse.data?.images
+          ?.map(img => img.imageUrl)
+          .filter(url =>
+            [".jpg", ".jpeg", ".png", ".webp"].some(ext =>
+              url.toLowerCase().endsWith(ext)
+            )
+          ) || [];
+    } catch (err) {
+      console.warn("Image fetch failed:", err.message);
+    }
+
+    // Step 6: References payload
+    const references = results.slice(0, 10).map((r, i) => ({
       id: i + 1,
       title: r.title,
       link: r.link,
       snippet: r.snippet,
     }));
 
-    // ✅ Step 6: Return response
+    // Final response
     res.status(200).json({
       success: true,
       query,
       aiResponse: aiText,
       references,
+      images,
       totalResults: results.length,
-      analyzedBy: "Cluezy AI (Professional Markdown Mode, Cerebras)",
+      analyzedBy: "Lumexa",
     });
-
-    console.log("Smart Web Search Successful (Cerebras)");
   } catch (error) {
-    console.error(
-      "Smart Web Search Error:",
-      error.response?.data || error.message
-    );
+    console.error("Smart Web Search Error:", error.response?.data || error.message);
     res.status(500).json({
       success: false,
-      message: "Smart web search failed",
-      error: error.response?.data || error.message,
+      error: "Smart web search failed.",
     });
   }
 };

@@ -14,44 +14,42 @@ export const generateAIResponse = async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    // 🗃️ Store user message
-    conversationHistory.push({ role: "user", content: userPrompt });
-    if (conversationHistory.length > 100) {
-      conversationHistory = conversationHistory.slice(-100);
-    }
+    // ➕ Store user message
+    conversationHistory.push({
+      role: "user",
+      content: userPrompt
+    });
 
-    // 🧩 Prepare short context
+    // ✂️ Keep only last 100 messages
+    conversationHistory = conversationHistory.slice(-100);
+
+    // 🧠 Build CONTEXT from history
     const context = conversationHistory
-      .slice(-20)
-      .map(
-        (msg) => `${msg.role === "user" ? "User" : "Lumexa"}: ${msg.content}`
-      )
+      .map(m => `${m.role.toUpperCase()}: ${m.content}`)
       .join("\n");
 
     // ⚙️ Enhanced System Prompt
-   const FinalPrompt = `
-You are **Lumexa**, a conversational assistant built by **Optivex Technologies**.
+    const FinalPrompt = `
+You are Lumexa, a conversational assistant developed by Optivex Technologies.
 
---- BEHAVIOR ---
-- Respond like a helpful human, not a textbook
-- Default to short paragraphs or bullet points
-- ❌ Do NOT use markdown tables unless the user explicitly asks
-- Use markdown ONLY for code blocks or small lists
-- Keep answers natural and chat-like
+Your responses should feel like they are written by a calm, intelligent human — clear, natural, and helpful.
 
---- QUALITY RULES ---
-- Be factual and clear
-- No fluff or repetition
-- Adapt tone to ${mode.toUpperCase()} MODE
-- Never mention being an AI model
+Behavior rules:
+- Medium-length, clear paragraphs
+- Conversational and easy to read
+- No tables or structured layouts
+- Markdown only for code blocks when necessary
+- No emojis unless user tone is casual
+- Never mention being an AI, model, or system
 
---- CONVERSATION CONTEXT ---
+Adapt tone and depth to ${mode.toUpperCase()} mode.
+
+--- CONTEXT ---
 ${context}
 
---- USER PROMPT ---
+--- USER QUERY ---
 ${userPrompt}
 `;
-
 
     // 🚀 Cerebras API Request
     const response = await axios.post(
@@ -59,8 +57,7 @@ ${userPrompt}
       {
         model: "gpt-oss-120b",
         messages: [
-          { role: "system", content: FinalPrompt },
-          { role: "user", content: userPrompt }
+          { role: "system", content: FinalPrompt }
         ],
         temperature: 0.6,
         max_tokens: 800
@@ -68,8 +65,8 @@ ${userPrompt}
       {
         headers: {
           Authorization: `Bearer ${process.env.CEREBRAS_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+          "Content-Type": "application/json"
+        }
       }
     );
 
@@ -77,22 +74,29 @@ ${userPrompt}
       response.data?.choices?.[0]?.message?.content ||
       "⚠️ No response from Lumexa.";
 
-    // 💾 Store AI response
-    conversationHistory.push({ role: "assistant", content: aiText });
+    // ➕ Store assistant reply
+    conversationHistory.push({
+      role: "assistant",
+      content: aiText
+    });
+
+    // ✂️ Keep last 100 again
+    conversationHistory = conversationHistory.slice(-100);
 
     res.status(200).json({
       success: true,
-      model: "cerebras-llama3.1-70b",
+      model: "gpt-oss-120b",
       response: aiText,
-      memory: conversationHistory.slice(-100),
+      memory: conversationHistory
     });
+
   } catch (error) {
     console.error("Cerebras API Error:", error.response?.data || error.message);
 
     res.status(500).json({
       success: false,
       message: "⚠️ Error generating AI response",
-      error: error.response?.data || error.message,
+      error: error.response?.data || error.message
     });
   }
 };
