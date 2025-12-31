@@ -44,9 +44,8 @@ export default function CluezyChat() {
     const [showModeMenu, setShowModeMenu] = useState(false);
     const scrollRef = useRef(null);
 
-    const ChatURL = "http://localhost:5000/api/generate";
-    const SearchURL = "http://localhost:5000/api/smart-search";
-    const PdfSearchURL = "http://localhost:5000/api/pdf-search";
+    const ChatURL = "https://lumexa-ai-2.onrender.com/api/generate";
+    const SearchURL = "https://lumexa-ai-2.onrender.com/api/smart-search";
 
     const modes = [
         { id: "chat", label: "Chat", icon: MessageSquare },
@@ -144,7 +143,7 @@ export default function CluezyChat() {
             else if (activeMode === "PDF Finder") {
 
 
-                const res = await axios.post("http://localhost:5000/api/pdf-search", {
+                const res = await axios.post("https://lumexa-ai-2.onrender.com/api/pdf-search", {
                     query: currentQuery,
                 });
 
