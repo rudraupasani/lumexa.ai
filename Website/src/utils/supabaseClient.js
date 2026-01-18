@@ -1,9 +1,10 @@
-// // 📁 src/utils/supabaseClient.js
-// import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js'
 
-// // ✅ Load from environment variables (Vite or Node)
-// const supabaseUrl = "https://kjaqqekoeibufyafrdey.supabase.co";
-// const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqYXFxZWtvZWlidWZ5YWZyZGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNTM2ODEsImV4cCI6MjA3NzgyOTY4MX0.1MwerqxIwiKiHnnOTgbM1o7iBZMSlPyTk2BIlZ3rNQw";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// // 🧠 Initialize Supabase client
-// export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Missing Supabase credentials. Authentication will not work.')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
