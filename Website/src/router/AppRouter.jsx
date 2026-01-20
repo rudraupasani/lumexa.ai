@@ -9,6 +9,7 @@ export default function AppRouter() {
     <Routes>
       <Route path="/" element={<ChatPAge />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/login" element={<LoginPage />} />
     </Routes>
   );
 }

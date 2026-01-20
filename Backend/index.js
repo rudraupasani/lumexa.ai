@@ -1,9 +1,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const connectToMongo = require("./DB/db");
 
-// connectToMongo();
+
 
 dotenv.config();
 const app = express();
@@ -21,7 +20,7 @@ const pdfRoutes = require("./routes/pdfroutes");
 // ✅ Use routes
 app.use("/api", aiRoutes);
 app.use("/api", webSearchRoutes);
-app.use("/api", pdfRoutes); 
+app.use("/api", pdfRoutes);
 
 // ✅ Root endpoint
 app.get("/", (req, res) => {

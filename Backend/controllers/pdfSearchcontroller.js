@@ -51,6 +51,8 @@ exports.searchPDFs = async (req, res) => {
         link: r.link,
         snippet: r.snippet || "",
       }));
+    console.log(pdfs);
+
 
     return res.status(200).json({
       success: true,

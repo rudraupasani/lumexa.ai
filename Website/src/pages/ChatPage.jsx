@@ -26,7 +26,7 @@ export default function CluezyChat() {
     // Credit System
     const [guestCredits, setGuestCredits] = useState(() => {
         const saved = localStorage.getItem('guest_credits');
-        return saved !== null ? parseInt(saved) : 10;
+        return saved !== null ? parseInt(saved) : 5;
     });
 
     useEffect(() => {
@@ -71,6 +71,7 @@ export default function CluezyChat() {
             // Save current chat before creating new one
             const chatExists = chats.some(chat => chat.id === currentChatId);
             if (!chatExists) {
+                if(user)
                 setChats((prev) => [
                     {
                         id: currentChatId,
@@ -261,29 +262,33 @@ export default function CluezyChat() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowHistory(!showHistory)}
-                            className="p-2 cursor-pointer hover:bg-zinc-800 rounded-lg transition-colors md:hidden"
+                            className="p-2 cursor-pointer bg-zinc-700 hover:bg-zinc-700 rounded-lg transition-colors md:hidden"
                         >
                             <History size={20} />
                         </button>
                         <button
                             onClick={handleNewChat}
-                            className="p-2 cursor-pointer hover:bg-zinc-800 rounded-lg transition-colors"
+                            className="p-2 cursor-pointer bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
                         >
-                            <Plus size={20} />
+                            <Plus size={20} /> 
                         </button>
                         <h1 className="text-lg font-semibold tracking-tight">Lumexa</h1>
-                        {!user && (
+                        {!user ? (
                             <div className="ml-2 px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700 text-xs text-zinc-400">
                                 {guestCredits} credits
                             </div>
-                        )}
+                        ) :
+                            <div className="ml-2 px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700 text-xs text-zinc-400">
+                                Unlimited Access
+                            </div>
+                        }
                     </div>
 
                     <div className="flex items-center gap-2">
                         {user ? (
                             <button
                                 onClick={() => navigate('/profile')}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-zinc-800 rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 cursor-pointer hover:bg-zinc-700 rounded-lg transition-colors"
                             >
                                 <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-xs font-medium">
                                     {user.user_metadata.avatar_url ? (
@@ -298,8 +303,15 @@ export default function CluezyChat() {
                                 </div>
                             </button>
                         ) : (
-                            <button className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
-                                <User size={20} />
+                            <button
+                                onClick={() => 
+                                    navigate('/login')
+                                    
+                                    
+                                }
+                                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
+                                <User 
+                                size={20} />
                             </button>
                         )}
                     </div>
@@ -349,7 +361,7 @@ export default function CluezyChat() {
                                                             <img
                                                                 src={user.user_metadata.avatar_url}
                                                                 alt="Avatar"
-                                                                className="w-full h-full object-cover"
+                                                                className="w-full h-full object-cover rounded-full"
                                                             />
                                                         ) : (
                                                             user?.email?.[0]?.toUpperCase() || "U"

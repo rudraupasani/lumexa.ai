@@ -23,7 +23,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative overflow-hidden w-full">
+    <div className="relative overflow-hidden w-full flex items-center justify-center min-h-screen px-4 bg-gradient-to-tr from-black via-zinc-900 to-black/80">
       {/* Ambient Glow */}
       <div className="absolute inset-0 pointer-events-none"></div>
 
