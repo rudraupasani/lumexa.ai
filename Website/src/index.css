@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+
+#mass{
+    scrollbar-width: none; /* Firefox */
+}

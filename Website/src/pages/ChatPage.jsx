@@ -3,7 +3,6 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-    History,
     Send,
     Plus,
     User,
@@ -11,6 +10,7 @@ import {
     MessageSquare,
     Globe,
     FileText,
+    PanelLeft,
 } from "lucide-react";
 
 import logo from '../../public/logo.png'
@@ -51,8 +51,9 @@ export default function CluezyChat() {
     const [showModeMenu, setShowModeMenu] = useState(false);
     const scrollRef = useRef(null);
 
-    const ChatURL = `${import.meta.env.VITE_BASE_URL}/api/generate`;
-    const SearchURL = `${import.meta.env.VITE_BASE_URL}/api/smart-search`;
+    const ChatURL = "https://lumexa-ai-2.onrender.com/api/generate";
+    const SearchURL = "https://lumexa-ai-2.onrender.com/api/smart-search";
+    const PDFURL = "https://lumexa-ai-2.onrender.com/api/pdf-search";
 
     // Save chats to localStorage whenever they change
     useEffect(() => {
@@ -71,16 +72,16 @@ export default function CluezyChat() {
             // Save current chat before creating new one
             const chatExists = chats.some(chat => chat.id === currentChatId);
             if (!chatExists) {
-                if(user)
-                setChats((prev) => [
-                    {
-                        id: currentChatId,
-                        title: messages[0]?.content?.slice(0, 40) || "New Chat",
-                        messages,
-                        date: new Date().toLocaleString(),
-                    },
-                    ...prev,
-                ]);
+                if (user)
+                    setChats((prev) => [
+                        {
+                            id: currentChatId,
+                            title: messages[0]?.content?.slice(0, 40) || "New Chat",
+                            messages,
+                            date: new Date().toLocaleString(),
+                        },
+                        ...prev,
+                    ]);
             }
         }
         setMessages([]);
@@ -176,7 +177,7 @@ export default function CluezyChat() {
                 }
             }
             else if (activeMode === "PDF") {
-                const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/pdf-search`, {
+                const res = await axios.post(PDFURL, {
                     query: currentQuery,
                 });
 
@@ -260,19 +261,23 @@ export default function CluezyChat() {
                 {/* Header */}
                 <header className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-md border-b border-white/5 z-40">
                     <div className="flex items-center gap-3">
+                        {/* Sidebar Toggle — ChatGPT style */}
                         <button
+                            id="sidebar-toggle"
                             onClick={() => setShowHistory(!showHistory)}
-                            className="p-2 cursor-pointer bg-zinc-700 hover:bg-zinc-700 rounded-lg transition-colors md:hidden"
+                            className="p-2 cursor-pointer hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white"
+                            title="Toggle sidebar"
                         >
-                            <History size={20} />
+                            <PanelLeft size={20} />
                         </button>
                         <button
                             onClick={handleNewChat}
                             className="p-2 cursor-pointer bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+                            title="New chat"
                         >
-                            <Plus size={20} /> 
+                            <Plus size={20} />
                         </button>
-                        <h1 className="text-lg font-semibold tracking-tight">Lumexa</h1>
+                        <h1 className="hidden  text-lg font-semibold tracking-tight">Lumexa</h1>
                         {!user ? (
                             <div className="ml-2 px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700 text-xs text-zinc-400">
                                 {guestCredits} credits
@@ -288,7 +293,7 @@ export default function CluezyChat() {
                         {user ? (
                             <button
                                 onClick={() => navigate('/profile')}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 cursor-pointer hover:bg-zinc-700 rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-1 py-1 bg-zinc-800 cursor-pointer hover:bg-zinc-700 rounded-lg transition-colors"
                             >
                                 <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-xs font-medium">
                                     {user.user_metadata.avatar_url ? (
@@ -304,14 +309,14 @@ export default function CluezyChat() {
                             </button>
                         ) : (
                             <button
-                                onClick={() => 
+                                onClick={() =>
                                     navigate('/login')
-                                    
-                                    
+
+
                                 }
                                 className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
-                                <User 
-                                size={20} />
+                                <User
+                                    size={20} />
                             </button>
                         )}
                     </div>
@@ -327,15 +332,15 @@ export default function CluezyChat() {
                 )}
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-hidden relative flex flex-col">
-                    <div ref={scrollRef} className="flex-1 overflow-y-auto w-full">
+                <div id="mass" className="flex-1 overflow-hidden relative flex flex-col">
+                    <div id="mass" ref={scrollRef} className="flex-1 overflow-y-auto w-full">
                         {messages.length === 0 && !loading ? (
                             <div className="flex flex-col items-center justify-center min-h-full text-center space-y-6 px-4">
                                 <div className="space-y-2">
-                                    <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+                                    <h1 className="text-xl md:text-5xl font-bold text-white tracking-tight">
                                         Ask anything
                                     </h1>
-                                    <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+                                    <p className="text-zinc-400 text-sm md:text-lg max-w-xl mx-auto">
                                         Lumexa helps you think, search, and create faster and smarter.
                                     </p>
                                 </div>
@@ -353,7 +358,7 @@ export default function CluezyChat() {
                                             <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center mt-1">
                                                 {msg.role === "assistant" ? (
                                                     <div className="w-full h-full rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                                                        <img src={logo} alt="AI" className="w-5 h-5" />
+                                                        <img src={logo} alt="AI" className="w-5 h-5 " />
                                                     </div>
                                                 ) : (
                                                     <div className="w-full h-full rounded-full bg-blue-600 flex items-center justify-center text-xs font-medium">
@@ -447,7 +452,7 @@ export default function CluezyChat() {
                                 placeholder={getPlaceholder()}
                                 disabled={loading || showLoginModal}
                                 rows={1}
-                                className="flex-1 bg-transparent border-0 focus:ring-0 border-blue-600 resize-none py-3 px-3 min-h-[44px] max-h-32 text-white placeholder-zinc-500 leading-relaxed scrollbar-hide text-[15px]"
+                                className="flex-1 bg-transparent border-0 border-blue-600 resize-none py-3 px-3 min-h-[44px] max-h-32 text-white placeholder-zinc-500 leading-relaxed scrollbar-hide text-[15px]"
                             />
 
                             <button
@@ -458,11 +463,7 @@ export default function CluezyChat() {
                                 <Send size={18} />
                             </button>
                         </div>
-                        <div className="text-center mt-2">
-                            <p className="text-[10px] text-zinc-600">
-                                LLMs can make mistakes. Verify important info.
-                            </p>
-                        </div>
+
                     </div>
                 </div>
             </div>

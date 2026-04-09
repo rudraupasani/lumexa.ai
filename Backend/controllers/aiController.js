@@ -1,5 +1,7 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import Cerebras from '@cerebras/cerebras_cloud_sdk';
+
 dotenv.config();
 
 // 🧩 In-memory conversation store
@@ -30,7 +32,7 @@ export const generateAIResponse = async (req, res) => {
 
     // ⚙️ Enhanced System Prompt
     const FinalPrompt = `
-You are Lumexa, a conversational assistant developed by Optivex Technologies.
+You are Lumexa, a conversational assistant
 
 Your responses should feel like they are written by a calm, intelligent human — clear, natural, and helpful.
 
@@ -55,12 +57,12 @@ ${userPrompt}
     const response = await axios.post(
       "https://api.cerebras.ai/v1/chat/completions",
       {
-        model: "gpt-oss-120b",
+        model: "qwen-3-235b-a22b-instruct-2507",
         messages: [
           { role: "system", content: FinalPrompt }
         ],
         temperature: 0.6,
-        max_tokens: 800
+        max_tokens: 800,
       },
       {
         headers: {
