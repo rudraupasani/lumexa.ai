@@ -112,7 +112,7 @@ Answer directly, follow the structure exactly, and end cleanly.
     const cerebrasResponse = await axios.post(
       "https://api.cerebras.ai/v1/chat/completions",
       {
-        model: "qwen-3-235b-a22b-instruct-2507",
+        model: "llama3.1-8b",
         messages: [
           { role: "system", content: FinalPrompt },
           { role: "user", content: query },

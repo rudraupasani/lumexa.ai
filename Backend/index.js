@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Keep-alive cron — pings this server every 10 minutes to prevent cold starts
-const SELF_URL = process.env.SELF_URL || `http://localhost:${process.env.PORT || 5000}`;
+const SELF_URL = process.env.SELF_URL
 
 cron.schedule("*/10 * * * *", async () => {
   const timestamp = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" });
