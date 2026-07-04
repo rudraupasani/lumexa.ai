@@ -35,6 +35,7 @@
   --msg-action-btn-text: var(--text-muted);
   --suggestion-chip-bg: rgba(255, 255, 255, 0.04);
   --suggestion-chip-hover-bg: var(--accent-light);
+  --accent-blue: #3b82f6;
 }
 
 .light-theme {
@@ -67,6 +68,7 @@
   --msg-action-btn-text: var(--text-muted);
   --suggestion-chip-bg: rgba(9, 9, 11, 0.03);
   --suggestion-chip-hover-bg: var(--accent-light);
+  --accent-blue: #2563eb;
 }
 
 /* ── Smooth Theme Transitions ── */
@@ -789,7 +791,7 @@ body {
   border-radius: 20px;
   padding: 10px 10px 10px 16px;
   width: 100%;
-  min-width: 600px;
+  min-width: 0;
   max-width: 760px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }

@@ -337,8 +337,12 @@ export default function ChatPage() {
                         <div className="chat-header-greeting">
                             {messages.length === 0 ? (
                                 <>
-                                    <h2>Hello, {userName}!</h2>
-                                    <p>How can I help you today?</p>
+                                    <h2
+                                        className="hidden lg:block"
+                                    >Hello, {userName}!</h2>
+                                    <p
+                                        className="hidden lg:block"
+                                    >How can I help you today?</p>
                                 </>
                             ) : (
                                 <h2 style={{ fontSize: 16 }}>
@@ -361,7 +365,7 @@ export default function ChatPage() {
                             </motion.div>
                         ) : (
                             <div className="credit-badge unlimited">
-                                ✨ Unlimited
+                                Unlimited
                             </div>
                         )}
 
@@ -628,14 +632,6 @@ export default function ChatPage() {
                                     {/* Add attachment button */}
                                     <button
                                         className="chat-mic-btn"
-                                        title="Attach file"
-                                        disabled={showLoginModal}
-                                    >
-                                        <Plus size={17} />
-                                    </button>
-
-                                    <button
-                                        className="chat-mic-btn"
                                         onClick={() => !showLoginModal && setShowModeMenu(!showModeMenu)}
                                         title="Web search"
                                         disabled={showLoginModal}
@@ -662,9 +658,6 @@ export default function ChatPage() {
                                 </div>
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        Astra Core <Settings size={10} />
-                                    </div>
                                     <motion.button
                                         onClick={() => handleSend()}
                                         disabled={!query.trim() || loading || showLoginModal}

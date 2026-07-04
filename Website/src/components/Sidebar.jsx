@@ -113,30 +113,8 @@ export const Sidebar = ({ showHistory, setShowHistory, chats, loadChat, deleteCh
             <Plus size={12} color="white" />
           </div>
           New chat
-          <div style={{ marginLeft: 'auto', fontSize: '10px', background: 'var(--recent-item-icon)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-white-opacity-40)' }}>Ctrl + N</div>
         </button>
 
-        {/* Nav Items */}
-        <nav className="sidebar-nav">
-          {navItems.map(item => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                className={`sidebar-nav-item ${activeNav === item.id ? 'active' : ''}`}
-                onClick={() => setActiveNav(item.id)}
-              >
-                <Icon size={16} className="sidebar-nav-icon" />
-                {item.label}
-                {item.shortcut && (
-                  <div style={{ marginLeft: 'auto', fontSize: '10px', background: 'var(--recent-item-icon)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-white-opacity-40)' }}>
-                    {item.shortcut}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </nav>
 
         {/* Recent Chats */}
         {chats.length > 0 && (
