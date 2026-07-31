@@ -305,7 +305,7 @@ export default function ChatPage() {
         || 'there';
 
     return (
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--chat-bg)', color: 'var(--text-primary)' }}>
+        <div style={{ display: 'flex', height: '100vh', height: '100dvh', overflow: 'hidden', background: 'var(--chat-bg)', color: 'var(--text-primary)' }}>
             {/* Sidebar */}
             <Sidebar
                 showHistory={showHistory}
@@ -337,12 +337,8 @@ export default function ChatPage() {
                         <div className="chat-header-greeting">
                             {messages.length === 0 ? (
                                 <>
-                                    <h2
-                                        className="hidden lg:block"
-                                    >Hello, {userName}!</h2>
-                                    <p
-                                        className="hidden lg:block"
-                                    >How can I help you today?</p>
+                                    <h2>Hello, {userName}!</h2>
+                                    <p>How can I help you today?</p>
                                 </>
                             ) : (
                                 <h2 style={{ fontSize: 16 }}>

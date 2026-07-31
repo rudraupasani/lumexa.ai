@@ -51,7 +51,7 @@ const Links = ({ data = [] }) => {
       </div>
 
       {/* Show more / less */}
-      {data.length > 6 && (
+      {data.length > 3 && (
         <button
           onClick={() => setShowAll(!showAll)}
           className="mt-4 text-sm text-blue-400 cursor-pointer hover:text-blue-300 transition

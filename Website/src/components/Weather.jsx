@@ -30,7 +30,7 @@ export default function WeatherCard({ data }) {
   const { emoji, icon } = getWeatherIcon(data.condition);
 
   return (
-    <div className="bg-[#111827] border border-blue-800 rounded-2xl p-5 w-[340px] mt-3 shadow-lg shadow-black/40">
+    <div className="bg-[#111827] border border-blue-800 rounded-2xl p-5 w-full max-w-[340px] mt-3 shadow-lg shadow-black/40">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center">

@@ -66,13 +66,12 @@ export const Sidebar = ({ showHistory, setShowHistory, chats, loadChat, deleteCh
       <motion.aside
         initial={false}
         animate={{
-          width: showHistory ? 240 : 0,
+          width: showHistory ? 260 : 0,
           opacity: showHistory ? 1 : 0,
         }}
         transition={{ type: 'spring', stiffness: 280, damping: 32 }}
-        className="sidebar"
+        className={`sidebar${showHistory ? ' open' : ''}`}
         style={{
-          width: showHistory ? 240 : 0,
           minWidth: 0,
           overflow: 'hidden',
           flexShrink: 0,
@@ -108,10 +107,8 @@ export const Sidebar = ({ showHistory, setShowHistory, chats, loadChat, deleteCh
         </div>
 
         {/* New Chat Button */}
-        <button className="sidebar-new-chat" onClick={onNewChat} id="sidebar-new-chat" style={{ justifyContent: 'flex-start', background: 'transparent', border: 'none', color: 'var(--text-white-opacity-90)', padding: '10px 12px', margin: '4px 8px 16px', fontWeight: 500 }}>
-          <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
-            <Plus size={12} color="white" />
-          </div>
+        <button className="sidebar-new-chat" onClick={onNewChat} id="sidebar-new-chat">
+          <Plus size={14} />
           New chat
         </button>
 

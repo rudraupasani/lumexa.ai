@@ -23,19 +23,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative overflow-hidden w-full flex items-center justify-center min-h-screen px-4 bg-gradient-to-tr from-black via-zinc-900 to-black/80">
+    <div
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        width: '100%',
+        minHeight: '100vh',
+        minHeight: '100dvh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        background: 'linear-gradient(to top right, #000, #18181b, rgba(0,0,0,0.8))',
+      }}
+    >
       {/* Ambient Glow */}
-      <div className="absolute inset-0 pointer-events-none"></div>
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}></div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full bg-black max-w-md rounded-2xl border border-white/10 backdrop-blur-2xl px-10 py-12 shadow-[0_0_40px_rgba(0,0,0,0.6)]">
-        <h1 className="text-3xl font-semibold text-white tracking-tight">
-          Welcome to <span className="text-blue-400">Lumexa</span>
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          width: '100%',
+          maxWidth: '28rem',
+          borderRadius: '1rem',
+          border: '1px solid rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(24px)',
+          padding: '3rem 2.5rem',
+          background: '#000',
+          boxShadow: '0 0 40px rgba(0,0,0,0.6)',
+        }}
+      >
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 600, color: '#fff', letterSpacing: '-0.025em' }}>
+          Welcome to <span style={{ color: '#60a5fa' }}>Lumexa</span>
         </h1>
 
-        <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#a1a1aa', lineHeight: 1.6 }}>
           Sign in to access{" "}
-          <span className="text-blue-400 font-medium">
+          <span style={{ color: '#60a5fa', fontWeight: 500 }}>
             Lumexa Smart Web Intelligence
           </span>
         </p>
@@ -43,24 +69,43 @@ export default function LoginPage() {
         {/* Google Login Button */}
         <button
           onClick={handleGoogleLogin}
-          className="mt-8 flex cursor-pointer items-center justify-center gap-3 w-full rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 py-3 text-sm font-medium text-white transition-all duration-300"
+          style={{
+            marginTop: '2rem',
+            display: 'flex',
+            cursor: 'pointer',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            width: '100%',
+            borderRadius: '0.75rem',
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            padding: '0.75rem',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            color: '#fff',
+            transition: 'all 0.3s',
+            fontFamily: 'Inter, sans-serif',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
         >
           <img
             src="https://www.svgrepo.com/show/475656/google-color.svg"
             alt="Google"
-            className="h-5 w-5"
+            style={{ height: '1.25rem', width: '1.25rem' }}
           />
           Continue with Google
         </button>
 
         {/* Footer */}
-        <p className="mt-10 text-center text-xs text-zinc-500">
+        <p style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.75rem', color: '#71717a' }}>
           By continuing, you agree to our{" "}
-          <span className="text-blue-400 hover:underline cursor-pointer">
+          <span style={{ color: '#60a5fa', cursor: 'pointer' }}>
             Terms
           </span>{" "}
           &{" "}
-          <span className="text-blue-400 hover:underline cursor-pointer">
+          <span style={{ color: '#60a5fa', cursor: 'pointer' }}>
             Privacy Policy
           </span>
         </p>

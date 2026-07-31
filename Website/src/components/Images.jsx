@@ -49,7 +49,7 @@ const Images = ({ images = [] }) => {
         </div>
 
         {/* Show more / less */}
-        {images.length > 3 && (
+        {images.length > 5 && (
           <button
             onClick={() => setShowAll(!showAll)}
             className="mt-4 cursor-pointer text-sm text-blue-400 hover:text-blue-300 transition

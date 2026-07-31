@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 const Link = ({ to, onClick, className, children }) => (
   <a href={to} onClick={onClick} className={className}>
@@ -10,6 +11,7 @@ const Link = ({ to, onClick, className, children }) => (
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { name: "Home", to: "/" },
@@ -51,22 +53,53 @@ export default function Navbar() {
               </motion.div>
             ))}
 
-            {/* Google Sign-In Button */}
-            <motion.div whileHover={{ scale: 1.05 }}>
-              <Link
-                to="/login"
-                className="ml-3 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 
-                           text-white font-medium hover:shadow-lg hover:shadow-cyan-500/20 
-                           transition-all duration-300 flex items-center gap-2"
-              >
-                <img
-                  src="https://www.svgrepo.com/show/475656/google-color.svg"
-                  alt="Google"
-                  className="w-5 h-5 bg-white rounded-full"
-                />
-                Continue with Google
-              </Link>
-            </motion.div>
+            {user ? (
+              <div className="flex items-center gap-3 ml-3">
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-800/40 border border-gray-700/60 hover:bg-gray-800/80 transition-all text-white"
+                >
+                  {user.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="Avatar"
+                      className="w-7 h-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center font-bold text-xs text-white">
+                      {user.email?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-200 hidden lg:inline">
+                    {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0]}
+                  </span>
+                </Link>
+
+                <button
+                  onClick={signOut}
+                  className="px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              /* Google Sign-In Button */
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Link
+                  to="/login"
+                  className="ml-3 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 
+                             text-white font-medium hover:shadow-lg hover:shadow-cyan-500/20 
+                             transition-all duration-300 flex items-center gap-2"
+                >
+                  <img
+                    src="https://www.svgrepo.com/show/475656/google-color.svg"
+                    alt="Google"
+                    className="w-5 h-5 bg-white rounded-full"
+                  />
+                  Continue with Google
+                </Link>
+              </motion.div>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -99,18 +132,56 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
-          <Link
-            to="/login"
-            onClick={() => setIsMenuOpen(false)}
-            className="flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium mt-2"
-          >
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              className="w-5 h-5 bg-white rounded-full"
-            />
-            Continue with Google
-          </Link>
+
+          {user ? (
+            <div className="pt-2 border-t border-gray-800/60 mt-2 space-y-2">
+              <Link
+                to="/profile"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-800/40 text-white"
+              >
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center font-bold text-white">
+                    {user.email?.[0]?.toUpperCase()}
+                  </div>
+                )}
+                <div className="text-left">
+                  <div className="text-sm font-semibold text-gray-200">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                  </div>
+                  <div className="text-xs text-gray-400 truncate max-w-[180px]">
+                    {user.email}
+                  </div>
+                </div>
+              </Link>
+
+              <button
+                onClick={() => { signOut(); setIsMenuOpen(false); }}
+                className="w-full flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-red-600/10 border border-red-600/20 text-red-400 font-semibold cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium mt-2"
+            >
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                className="w-5 h-5 bg-white rounded-full"
+              />
+              Continue with Google
+            </Link>
+          )}
         </motion.div>
       )}
     </motion.nav>
